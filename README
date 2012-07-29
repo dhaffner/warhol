@@ -1,0 +1,60 @@
+warhol
+
+A small server and browser extension combination that allows for adding styles
+and scripts to a page on the fly. Supports JavaScript, CSS. Allows for direct
+conversion from an 'extension' language such as Sass, LESS, or Coffeescript.
+
+See ./example/config for an example configuration. 
+
+This extension draws on work and concepts from several previous extensions,
+namely:
+* dotjs, dotss
+* Greasemonkey
+* Stylish
+
+
+INSTALLATION
+
+
+warhol requires gunicorn:
+    
+    pip install gunicorn
+
+Copy the default configuration from the install directory to your home:
+
+    cp -rv ./example ~/.warhol 
+
+Optionally, edit any files under ~/.warhol/, specifically ~/.warhol/config.
+
+To load the Chrome extension in Developer mode, click 'Load unpacked
+extension...' and select the the 'chrome' directory under the
+warhol folder.
+
+
+USAGE
+
+
+Ensure that warhol.py is executable:
+
+    chmod +x warhol.py
+
+
+To run the server using the default configuration file. (~/.warhol/config)
+
+    ./warhol.py
+
+
+To run the server using a specified configuration file.
+
+    ./warhol.py <config>
+
+
+To run a check on a specified configuration, and run the server using that
+configuration:
+
+    ./warhol.py --check <config>
+
+
+To only run a check on the specified configuration.
+
+    ./warhol check <config>
