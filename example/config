@@ -1,0 +1,31 @@
+{
+    "compilers": {
+        "coffee": "coffee --print --compile", 
+        "less": "lessc", 
+        "scss": "sass"
+    }, 
+    "css": {
+        "extensions": [
+            "css", 
+            "scss", 
+            "less"
+        ], 
+        "paths": [
+            "~/.warhol/css"
+        ]
+    }, 
+    "gunicorn": {
+        "bind": "127.0.0.1:1928", 
+        "log-level": "error",  
+        "workers": 2
+    }, 
+    "js": {
+        "extensions": [
+            "js", 
+            "coffee"
+        ], 
+        "paths": [
+            "~/.warhol/js"
+        ]
+    }
+}
