@@ -36,13 +36,13 @@
 		});
 	};
 
-	var hostname = window.location.host;
+	var hostname = window.location.hostname;
 	if (/^www\./i.test(hostname))
 		hostname = hostname.substring(4);
 
 	$(function() {
 		js(hostname);
 	});
-	
+
 	css(hostname);
 })('localhost:1928');
