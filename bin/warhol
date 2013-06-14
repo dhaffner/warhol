@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+
+if __name__ == '__main__':
+    args = sys.argv
+    if len(args) > 1:
+        command = args[1]
+        if command.endswith('check'):
+            if len(args) < 3:
+                exit('specify a configuration file')
+
+            else:
+                filename = args[2]
+                CheckConfig(filename)
+
+            if not command.startswith('-'):
+                exit(0)
+
+            else:
+                print()
+
+        else:
+            filename = args[1]
+
+    else:
+        filename = CONFIG
+
+else:
+    filename = CONFIG
+
+config, app = init(filename)
+
+if __name__ == '__main__':
+    print('configuration: {}'.format(filename))
+    options = config.get('gunicorn', {})
+    workers = gunicorn(app, **options)
+    signal.signal(signal.SIGINT, functools.partial(sigint, workers))
+    workers.wait()
+    exit(0)
