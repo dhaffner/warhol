@@ -1,237 +1,41 @@
 #!/usr/bin/env python
 from __future__ import print_function
 
-__all__ = ['init', 'app']
+__all__ = ['init']
 
-import collections
-import functools
-import itertools
 import json
-import operator
 import os
-import re
-import signal
+import os.path
 import subprocess
-import sys
 
-NAME = 'warhol'
-CONFIG = '~/.warhol/config'
+from operator import itemgetter
 
-
-#
-#   Helper functions
-#
+from helpers import first, findfiles, fullpath
 
 
-def empty(generator):
-    """Return True or False depending on whether generator is empty."""
-    try:
-        next(generator)
-        return False
+'''
+When a request comes in:
 
-    except StopIteration:
-        return True
-
-
-def domain(filename, extensions=('\w+', )):
-    """Extract and return the domain portion of the requested filename.
-    Optionally limit only to those filenames which have one of the
-    specified extensions.
-    """
-    pattern = '\W?([^\.]+\.[^\.]+)\.(?:{})$'.format('|'.join(extensions))
-    iterable = re.finditer(pattern, filename, flags=re.IGNORECASE | re.LOCALE)
-
-    for match in iterable:
-        hostname, = match.groups(0)
-        return hostname
+1 check its filename: should be like www.github.com.js
+2 get all extensions which map (compile to) js from the config: [coffee, elm, etc]
+3 take first matching filename of form www.github.com.ext where ext in above list
+4 run compiler on said file
+5 return it as http response
+'''
 
 
-def findfiles(filename, extensions, dirs):
-    """Return an iterable of files which map to the given filename (likely
-    from a request) and have the specified extensions. Limit the search to
-    the specified dirs.
-    """
-    hostname = domain(filename, extensions)
-
-    if hostname is None or \
-       (extensions and not len(extensions)) or \
-       (dirs and not len(dirs)):  # fail somehow
-        return tuple()
-
-    match = matches('\.?{}\.({})$'.format(hostname, '|'.join(extensions)))
-    files = itertools.ifilter(match, flatten(itertools.imap(listdir, dirs)))
-    valid = lambda f: not empty(itertools.ifilter(f.endswith, extensions))
-    return itertools.ifilter(valid, files)
-
-
-def first(iterable):
-    """Return the first item from the given iterable."""
-    try:
-        return next(iterable)
-    except TypeError:
-        return next(iter(iterable))
-
-
-# Flatten an iterable of iterables one level of nesting.
-flatten = itertools.chain.from_iterable
-
-
-def listdir(path):
-    """Return a list of files in the given path. Files are returned with
-    full and absolute paths.
-    """
-    fullpath = normalize(path)
-    join = functools.partial(os.path.join, fullpath)
-    return itertools.imap(join, os.listdir(fullpath))
-
-
-def matches(pattern):
-    """Return a boolean test function for the given regular expression."""
-    compiled = re.compile(pattern, flags=re.IGNORECASE | re.LOCALE)
-    return lambda string: bool(compiled.search(string))
-
-
-def normalize(filename):
-    """Normalize a filename to a full path."""
-    return os.path.abspath(os.path.expanduser(filename))
-
-
-def which(executable):
-    if executable is None or len(executable) == 0:
-        return False
-
-    if executable.find(' ') >= 0:
-        executable = executable.split(' ')[0]
-
-    return not os.system('\which -s {}'.format(executable))
-
-
-#
-#   Application functions
-#
-
-
-class CheckConfig(object):
-    def __init__(self, filename=CONFIG, options=None):
-        if options is not None:
-            self.options = {}.update(options)
-
-        else:
-            self.options = self.config(filename)
-
-        self.check()
-
-    def check(self):
-        # config already checked on init
-        keys = ('js', 'css', 'compilers')
-        for k in itertools.ifilterfalse(self.options.has_key, keys):
-            print('error - expected to find key {} in config'.format(k))
-
-        else:
-            self.compilers()
-            self.paths()
-
-        if self.gunicorn():
-            self.bind()
-
-        print('done')
-
-    def config(self, filename=None):
-        try:
-            with open(normalize(filename), 'Ur') as f:
-                return json.load(f)
-
-        except:
-            print('error - could not open and parse:', filename)
-            exit()
-
-        finally:
-            print('ok -', filename)
-
-    def compilers(self):
-        for extension, command in self.options['compilers'].iteritems():
-            if not which(command):
-                print('error - command for {}'.format(extension),
-                      ' not found in path: {}'.format(command))
-        else:
-            print('ok - compilers')
-
-    def paths(self):
-        kinds = operator.itemgetter('js', 'css')
-        paths = flatten(itertools.imap(operator.itemgetter('paths'),
-                                       kinds(self.options)))
-        paths = itertools.imap(normalize, paths)
-        for path in itertools.ifilterfalse(os.path.exists, paths):
-            print('path not found:', path)
-
-        print('ok - paths')
-
-    def gunicorn(self):
-        if not which('gunicorn'):
-            print('error - gunicorn not found')
-
-        elif 'gunicorn' not in self.options:
-            print('error - no gunicorn options specified')
-
-        else:
-            print('ok - gunicorn')
-            return True
-
-        return False
-
-    def bind(self):
-        location = self.options['gunicorn'].get('bind')
-        if location is None:
-            print('error - no bind location specified for gunicorn (bind)')
-
-        if not os.system('\lsof -i "TCP@{}" >> /dev/null'.format(location)):
-            print('error - bind location {} already in use'.format(location))
-            return False
-
-        else:
-            print('ok - bind location {}'.format(location))
-
-        return True
-
-
-def sigint(proc, *args):
-    """Kill gunicorn when we get a sigint."""
-    proc.terminate()
-
-
-def gunicorn(func, **options):
-    """Launch gunicorn to handle the worker threads."""
-    name = '{}:{}'.format(NAME, func.__name__)
-
-    defaults = {'name': NAME, 'bind': '127.0.0.1:1928', 'workers': 2,
-                'log-level': 'error'}
-
-    for key in defaults.iterkeys():
-        if key not in options:
-            options[key] = defaults[key]
-
-    args = itertools.starmap('--{}={}'.format, options.iteritems())
-    command = ('gunicorn', '--preload') + (tuple(args) + (name, ))
-    proc = subprocess.Popen(command,
-                            stdout=sys.stdout, stdin=sys.stdin, shell=False)
-    print('{name} ~ {bind}'.format(**options))
-    return proc
-
-
-def init(filename=CONFIG, options=None, **kwargs):
+def init(filename=None, options=None, **kwargs):
     """Initialize an HTTP app with the specified settings and return its
     callable.
 
     filename (and thus all configuration) defaults to CONFIG.
     """
-    config = {}
 
-    with open(normalize(filename), 'Ur') as f:
-        try:
-            foptions = json.load(f)
-            config.update(foptions)
-        except:
-            pass
+    # Build the config dictionary. Prioritize settings, config, and kwargs
+    # in that order.
+    config = {}
+    with open(fullpath(filename), 'Ur') as f:
+        config.update(json.load(f))
 
     if options is not None:
         config.update(options)
@@ -239,10 +43,12 @@ def init(filename=CONFIG, options=None, **kwargs):
     if kwargs is not None:
         config.update(kwargs)
 
-    if not ('css' in config and 'js' in config):
-        print('css and js settings missing from config')
-        exit(0)
+    if not ('styles' in config and 'scripts' in config):
+        print('Error: css and js settings missing from config')
+        return
 
+    # For each compiler specified in the config, ensure its executable
+    # exist or don't add it.
     compilers = config.get('compilers', {})
 
     seen = set()
@@ -251,52 +57,63 @@ def init(filename=CONFIG, options=None, **kwargs):
         if executable in seen:
             continue
 
+        seen.add(executable)
         if os.system('which -s {}'.format(executable)) != 0:
             del compilers[extension]
 
-        seen.add(executable)
+    #
+    #   App-level helpers
+    #
 
-    del seen, extension, command
+    extensions_paths = itemgetter('extensions', 'paths')
 
-    def compile_(filename, extension):
+    isstyle = config['styles']['extensions'].__contains__
+
+    isscript = config['scripts']['extensions'].__contains__
+
+    def _compile(filename, extension, compilers=config['compilers']):
         command = tuple(compilers[extension].split(' ')) + (filename, )
         return subprocess.Popen(command, stdout=subprocess.PIPE)
 
-    setting = collections.namedtuple('setting', ['js', 'css'])
-
-    extensions = setting(tuple(config['js']['extensions']),
-                         tuple(config['css']['extensions']))
-
-    paths = setting(tuple(config['js']['paths']),
-                    tuple(config['css']['paths']))
-
-    isjavascript = matches('.{}$'.format('|'.join(extensions.js)))
-    iscss = matches('.{}$'.format('|'.join(extensions.css)))
+    #
+    #
+    #
 
     def app(environ, respond):
-        headers = {}
-        name = environ['PATH_INFO']
-        if iscss(name):
-            preferences, dirs = extensions.css, paths.css
+        headers = {'Content-type': 'text/plain'}
+
+        path = environ['PATH_INFO']
+
+        domain, extension = os.path.splitext(environ['PATH_INFO'])
+        domain, extension = domain[1:], extension[1:]
+
+        print(path, domain, extension)
+
+        extensions, paths = [], []
+
+        if isstyle(extension):
             headers['Content-type'] = 'text/css'
+            extensions, paths = extensions_paths(config['styles'])
 
-        elif isjavascript(name):
-            preferences, dirs = extensions.js, paths.js
+        elif isscript(extension):
             headers['Content-type'] = 'text/javascript'
+            extensions, paths = extensions_paths(config['scripts'])
 
-        else:
-            preferences, dirs = tuple(), tuple()
-            headers['Content-type'] = 'text/plain'
+        print(paths, extensions)
 
-        files = findfiles(name, preferences, dirs)
+        files = list(findfiles(path, extensions, paths))
         try:
             filename = first(files)
-            extension = filename.split('.')[-1].lower()
+            base, extension = os.path.splitext(filename)
+
+            extension = extension[1:].lower()
+            print(extension, compilers)
             if extension in compilers:
-                proc = compile_(filename, extension)
+                proc = _compile(filename, extension)
                 lines = tuple(iter(proc.stdout.readline, b''))
 
-            else:
+            else:  # TODO: filename no compiler, but should ensure it is
+                   # CSS or JS.
                 with open(filename, 'Ur') as f:
                     lines = tuple(iter(f.readline, b''))
 
@@ -310,4 +127,4 @@ def init(filename=CONFIG, options=None, **kwargs):
         respond('200 OK', headers.iteritems())
         return iter(lines)
 
-    return config, app
+    return app
