@@ -1,27 +1,28 @@
 {
     "content_scripts": [
         {
-            "all_frames": false, 
+            "all_frames": false,
             "js": [
-                "jquery-1.7.2.min.js", 
+                "jquery-1.7.2.min.js",
                 "warhol.js"
-            ], 
+            ],
             "matches": [
-                "http://*/*", 
+                "http://*/*",
                 "https://*/*"
-            ], 
+            ],
             "run_at": "document_start"
         }
-    ], 
-    "description": "Warhol the web.", 
+    ],
+    "description": "Warhol the web.",
     "icons": {
-        "128": "icon-128.png", 
+        "128": "icon-128.png",
         "48": "icon-48.png",
         "16": "icon-48.png"
-    }, 
-    "name": "warhol", 
+    },
+    "name": "warhol",
     "permissions": [
         "tabs"
-    ], 
-    "version": "0.1"
+    ],
+    "version": "0.1",
+    "manifest_version": 2
 }

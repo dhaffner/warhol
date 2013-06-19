@@ -1,48 +1,46 @@
 (function(local) {
-	var style = '<style id="warhol-css" type="text/css"></style>';
+    var url = function(path) {
+        return ['http://', local, '/', path].join('');
+    };
 
-	var url = function(path) {
-		return ['http://', local, '/', path].join('');
-	};
+    var getScript = function(domain) {
+        return $.ajax({
+                url: url(domain + '.js'),
+                dataType: 'text'
+            }).done(function(source) {
+                if (!source.length)
+                    return;
 
-	var js = function(hostname) {
-		$.ajax({
-			url: url(hostname + '.js'),
-			dataType: 'text',
-			success: function(source) {
-				if (!source.length)
-					return;
+                $(function() {
+                    console.log(source);
+                });
 
-				$(function() {
-					eval(source);
-				});
-			},
-			error: function() { }  // Fail silently.
-		});
-	};
+            });
+    };
 
-	var css = function(hostname) {
-		$.ajax({
-			url: url(hostname + '.css'),
-			dataType: 'text',
-			success: function(source) {
-				if (!document.head || !source.length)
-					return;
+    var getStyles = function(hostname) {
+        return $.ajax({
+                url: url(hostname + '.css'),
+                dataType: 'text'
+            }).done(function(source) {
+                if (!document.head || !source.length)
+                    return;
 
-				var element = $(style).html(source);
-				$(document.head).append(element);
-			},
-			error: function() { }  // Fail silently.
-		});
-	};
+                $(function() {
+                    $("<style></style>")
+                        .attr('class', 'warhol-styles')
+                        .attr('type', 'text/css')
+                        .html(source)
+                        .appendTo(document.head);
+                });
+            });
+    };
 
-	var hostname = window.location.hostname;
-	if (/^www\./i.test(hostname))
-		hostname = hostname.substring(4);
+    var hostname = window.location.hostname;
+    if (/^www\./i.test(hostname))
+        hostname = hostname.substring(4);
 
-	$(function() {
-		js(hostname);
-	});
+    getStyles(hostname);
+    getScript(hostname);
 
-	css(hostname);
-})('localhost:1928');
+})('localhost:8000');
