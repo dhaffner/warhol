@@ -101,7 +101,6 @@ def findfiles(filename, extensions, dirs):
     matcher = matches(pattern)
 
     def match(fn):
-        print(fn)
         return matcher(fn)
 
     # Filter for the files which match for the above function.

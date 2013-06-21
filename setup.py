@@ -9,5 +9,5 @@ setup(name='warhol',
       license='MIT',
       packages=['warhol'],
       scripts=['bin/warhol'],
-      install_requires=['six', 'gunicorn'],
+      install_requires=['baker', 'gunicorn', 'six'],
       zip_safe=False)

@@ -87,8 +87,6 @@ def init(filename=None, options=None, **kwargs):
         domain, extension = os.path.splitext(environ['PATH_INFO'])
         domain, extension = domain[1:], extension[1:]
 
-        print(path, domain, extension)
-
         extensions, paths = [], []
 
         if isstyle(extension):
@@ -99,15 +97,12 @@ def init(filename=None, options=None, **kwargs):
             headers['Content-type'] = 'text/javascript'
             extensions, paths = extensions_paths(config['scripts'])
 
-        print(paths, extensions)
-
-        files = list(findfiles(path, extensions, paths))
+        files = findfiles(path, extensions, paths)
         try:
             filename = first(files)
             base, extension = os.path.splitext(filename)
 
             extension = extension[1:].lower()
-            print(extension, compilers)
             if extension in compilers:
                 proc = _compile(filename, extension)
                 lines = tuple(iter(proc.stdout.readline, b''))

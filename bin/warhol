@@ -4,12 +4,11 @@ import signal
 import sys
 
 from itertools import starmap
-from pprint import pprint
 from subprocess import Popen
 
 import baker
 
-from warhol import warhol, helpers
+from warhol import helpers
 
 
 moduleformat = 'warhol.warhol:init(filename="{}")'.format
@@ -30,17 +29,41 @@ def gunicorn(module, options):
 
     arguments.update(options)
 
-    args = starmap('--{}={}'.format, options.iteritems())
+    args = starmap('--{}={}'.format, arguments.iteritems())
 
     command = ('gunicorn', '--preload') + tuple(args) + (module, )
     return Popen(command, stdout=sys.stdout, stdin=sys.stdin, shell=False)
 
 
-if __name__ == '__main__':
-    filename = helpers.fullpath(sys.argv[1])
-    print('configuration: {}'.format(filename))
+@baker.command
+def match(config, filename):
+    """
+    Print out each filename that would match for the given filename.
 
-    gunicorn(moduleformat(filename), {})
+    Useful to test what assets would match for a given domain or request.
+
+    $ warhol ~/.warhol/config google.com.js
+    """
+    pass
+
+
+@baker.command
+def test(config):
+    """
+    Test the specified configuration.    """
+
+    pass
+
+
+@baker.command(default=True)
+def run(config):
+    config = helpers.fullpath(config)
+    print('Configuration: {}'.format(config))
+    gunicorn(moduleformat(config), {})
+
+
+if __name__ == '__main__':
+    baker.run()
 
     # options = config.get('gunicorn', {})
     # workers = warhol.gunicorn(app, **options)
