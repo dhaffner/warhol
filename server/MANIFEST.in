@@ -1,0 +1,5 @@
+include README.md
+include chrome/*.js
+include chrome/*.json
+include chrome/*.png
+
