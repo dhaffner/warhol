@@ -35,8 +35,7 @@ Install the server portion of warhol via `make`.
 The Google Chrome extension can be installed manually:
 1. Navigate to [chrome://extesion/](chrome://extesion/)
 2. Check the box labeled 'Developer Mode'
-3. Click 'Load unpacked extension' and select the `chrome` folder
-under your warhol directory.
+3. Click 'Load unpacked extension' and select the `chrome` folder under your warhol directory.
 
 An alternative method for installing the extension is available via `make`:
 
@@ -54,28 +53,3 @@ easily edited to use alternative paths.
 
 ## Usage
 
-
-Ensure that warhol.py is executable:
-
-    chmod +x warhol.py
-
-
-To run the server using the default configuration file. (~/.warhol/config)
-
-    ./warhol.py
-
-
-To run the server using a specified configuration file.
-
-    ./warhol.py <config>
-
-
-To run a check on a specified configuration, and run the server using that
-configuration:
-
-    ./warhol.py --check <config>
-
-
-To only run a check on the specified configuration.
-
-    ./warhol check <config>
