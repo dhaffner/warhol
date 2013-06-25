@@ -43,4 +43,4 @@
     getStyles(hostname);
     getScript(hostname);
 
-})('localhost:8000');
+})('localhost:1928');

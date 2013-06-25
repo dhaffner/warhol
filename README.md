@@ -16,18 +16,43 @@ namely:
 [greasemonkey]: https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/
 [stylish]: https://chrome.google.com/webstore/detail/stylish/fjnbnpbmkenffdnngjfgmeleoegfcffe?hl=en
 
-## INSTALLATION
+## Installation
+
+Open a terminal and check out the warhol repoitory:
 
     $ git clone https://github.com/dhaffner/warhol
     $ cd warhol
-    $ python setup.py install
 
-Load the Chrome extension in Developer mode, click 'Load unpacked
-extension...' and select the the 'chrome' directory under the
-warhol folder.
+#### Server
+
+Install the server portion of warhol via `make`.
+
+    $ make server
 
 
-## USAGE
+#### Extension
+
+The Google Chrome extension can be installed manually:
+1. Navigate to [chrome://extesion/](chrome://extesion/)
+2. Check the box labeled 'Developer Mode'
+3. Click 'Load unpacked extension' and select the `chrome` folder
+under your warhol directory.
+
+An alternative method for installing the extension is available via `make`:
+
+    $ make extension
+
+This will:
+* Pack the `chrome` directory into a .crx
+* Install it as an [external extension](http://developer.chrome.com/extensions/external_extensions.html)
+* Remove any previous installs of the same .crx file
+* Relaunch Chrome
+
+The `make-extension` script is provided as a convenience but can be
+easily edited to use alternative paths.
+
+
+## Usage
 
 
 Ensure that warhol.py is executable:

@@ -52,21 +52,22 @@ def test(config):
     """
     Test the specified configuration.    """
 
-    pass
+    from warhol import check
+    check.check(config)
 
 
 @baker.command(default=True)
 def run(config):
     config = helpers.fullpath(config)
     print('Configuration: {}'.format(config))
-    gunicorn(moduleformat(config), {})
+    workers = gunicorn(moduleformat(config), {})
+
+    def sigint(num, stack_frame):
+        workers.terminate()
+
+    signal.signal(signal.SIGINT, sigint)
+    workers.wait()
 
 
 if __name__ == '__main__':
     baker.run()
-
-    # options = config.get('gunicorn', {})
-    # workers = warhol.gunicorn(app, **options)
-    # signal.signal(signal.SIGINT, functools.partial(warhol.sigint, warhol.workers))
-    # warhol.workers.wait()
-    exit(0)
