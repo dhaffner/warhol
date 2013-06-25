@@ -1,0 +1,45 @@
+#!/bin/bash
+
+EXTERNAL_EXTENSIONS="$HOME/Library/Application Support/Google/Chrome/External Extensions"
+EXTENSION="$(pwd)/chrome";
+CHROMEAPP='/Applications/Google Chrome.app'
+CHROME='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+
+echo "Chrome: $CHROME";
+echo "Extension: $EXTENSION";
+
+test -e chrome.crx && \rm chrome.crx;
+test -e chrome.pem && \rm chrome.pem;
+
+echo;
+echo '> Packing the extension...';
+"$CHROME" --pack-extension="$EXTENSION" --no-message-box > /dev/null;
+test -e chrome.pem && \rm chrome.pem;
+echo "$EXTENSION.crx";
+echo;
+
+# Get its ID.
+CRXID=$(./tools/crx_id.py ./chrome.crx | grep 'AppID' | sed  -e 's/^AppID: //');
+PREFERENCES="$EXTERNAL_EXTENSIONS""/$CRXID.json";
+
+\mkdir -vp "$EXTERNAL_EXTENSIONS"
+
+echo '> Removing any preference files pointing to extension';
+test -e "$PREFERENCES" && rm -rv "$PREFERENCES";
+grep -ilr "$EXTENSION\.crx" "$EXTERNAL_EXTENSIONS" | grep "\.json$" | xargs -I% rm -v %;
+echo;
+
+echo '> Writing preference file to External Extensions folder...';
+echo "$PREFERENCES";
+echo \
+"{
+    \"external_crx\": \"$EXTENSION.crx\",
+    \"external_version\": \"0.1\"
+}" >> "$PREFERENCES"
+
+echo;
+echo '> Relaunching Chrome...';
+
+# Find Chrome's pid, if it's running
+ps -xo pid,comm | grep 'Google Chrome$' | awk {'print $1'} | xargs kill;
+sleep 1.5 && open "$CHROMEAPP"

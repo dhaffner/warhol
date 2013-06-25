@@ -1,9 +1,12 @@
-.PHONY: extension server
+.PHONY: extension server clean
 
 all: extension server
 
 extension:
-	./load-extension
+	./make-extension
 
 server:
-	python ./server/setup.py install
+	cd server && python setup.py install;
+
+clean:
+	\rm chrome.crx
