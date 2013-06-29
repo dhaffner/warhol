@@ -1,46 +1,39 @@
 (function(local) {
-    var url = function(path) {
-        return ['http://', local, '/', path].join('');
+    var url = function(domain, extension) {
+        return ['http://', local, '/', domain, '.', extension].join('');
     };
 
-    var getScript = function(domain) {
-        return $.ajax({
-                url: url(domain + '.js'),
-                dataType: 'text'
-            }).done(function(source) {
-                if (!source.length)
-                    return;
-
-                $(function() {
-                    console.log(source);
-                });
-
-            });
+    var get = function(domain, extension) {
+        return $.ajax({ url: url(domain, extension), dataType: 'text' });
     };
 
-    var getStyles = function(hostname) {
-        return $.ajax({
-                url: url(hostname + '.css'),
-                dataType: 'text'
-            }).done(function(source) {
-                if (!document.head || !source.length)
-                    return;
+    var domain = window.location.hostname;
+    if (/^www\./i.test(domain))
+        domain = domain.substring(4);
 
-                $(function() {
-                    $("<style></style>")
-                        .attr('class', 'warhol-styles')
-                        .attr('type', 'text/css')
-                        .html(source)
-                        .appendTo(document.head);
-                });
-            });
-    };
+    // Styles
+    get(domain, 'css').done(function(source) {
+        if (!source || !source.length)
+            return;
 
-    var hostname = window.location.hostname;
-    if (/^www\./i.test(hostname))
-        hostname = hostname.substring(4);
+        $(function() {
+            if (!document.head)
+                return;
 
-    getStyles(hostname);
-    getScript(hostname);
+            $("<style></style>")
+                .attr('class', 'warhol-styles')
+                .attr('type', 'text/css')
+                .html(source)
+                .appendTo(document.head);
+        });
+    });
+
+    // Scripts
+    get(domain, 'js').done(function(source) {
+        if (!source || !source.length)
+            return;
+
+        $(eval.bind(window, source));
+    });
 
 })('localhost:1928');

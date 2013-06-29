@@ -33,7 +33,7 @@ Install the server portion of warhol via `make`.
 #### Extension
 
 The Google Chrome extension can be installed manually:
-1. Navigate to [chrome://extesion/](chrome://extesion/)
+1. Navigate to `chrome://extension/`
 2. Check the box labeled 'Developer Mode'
 3. Click 'Load unpacked extension' and select the `chrome` folder under your warhol directory.
 

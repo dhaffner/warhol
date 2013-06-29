@@ -11,7 +11,7 @@ def check(filename):
 
     # Check for compilers
     for extension, command in config['compilers'].iteritems():
-        assert which(command), '{} executable not found'.format(command)
+        assert which(command), 'error: {} executable not found'.format(command)
 
     # Check paths -- REFACTOR
     # kinds = operator.itemgetter('js', 'css')
@@ -23,7 +23,7 @@ def check(filename):
 
     # print('ok - paths')
 
-    assert which('gunicorn'), 'gunicorn not found'
+    assert which('gunicorn'), 'error: gunicorn not found'
 
     if 'gunicorn' in config:
         location = config['gunicorn'].get('bind')

@@ -1,31 +1,22 @@
 {
-    "compilers": {
-        "coffee": "coffee --print --compile",
-        "less": "lessc",
-        "scss": "sass"
-    },
-    "css": {
-        "extensions": [
-            "css",
-            "scss",
-            "less"
-        ],
-        "paths": [
-            "~/.warhol/css"
-        ]
-    },
     "gunicorn": {
-        "bind": "127.0.0.1:1928",
+        "bind": "127.0.0.1:8000",
         "log-level": "error",
         "workers": 2
     },
-    "js": {
-        "extensions": [
-            "js",
-            "coffee"
-        ],
-        "paths": [
-            "~/.warhol/js"
-        ]
+    "text/css": {
+        "bind": ".css",
+        "extensions": {
+            ".scss": "sass",
+            ".less": "lessc"
+        },
+        "paths": ["~/.warhol/css"]
+    },
+    "text/javascript": {
+        "bind": ".js",
+        "extensions": {
+            ".coffee": "coffee --print --compile"
+        },
+        "paths": ["~/.warhol/js"]
     }
 }

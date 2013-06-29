@@ -22,10 +22,11 @@ def sigint(proc, *args):
 def gunicorn(module, options):
     """Launch gunicorn to handle the worker threads."""
 
-    arguments = {'name': 'warhol',
+    arguments = {'pid': './warhol.pid',
+                 'name': 'warhol',
                  'bind': '127.0.0.1:1928',
                  'workers': 2,
-                 'log-level': 'error'}
+                 'log-level': 'debug'}
 
     arguments.update(options)
 
