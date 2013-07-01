@@ -1,6 +1,6 @@
-(function(local) {
+(function(localhost) {
     var url = function(domain, extension) {
-        return ['http://', local, '/', domain, '.', extension].join('');
+        return ['http://', localhost, '/', domain, '.', extension].join('');
     };
 
     var get = function(domain, extension) {
@@ -20,7 +20,7 @@
             if (!document.head)
                 return;
 
-            $("<style></style>")
+            $('<style></style>')
                 .attr('class', 'warhol-styles')
                 .attr('type', 'text/css')
                 .html(source)
@@ -35,5 +35,4 @@
 
         $(eval.bind(window, source));
     });
-
 })('localhost:1928');
