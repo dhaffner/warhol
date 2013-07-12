@@ -68,7 +68,13 @@ def init(filename=None, options=None, **kwargs):
     del config
 
     def app(environ, respond):
-        headers = {'Content-type': 'text/plain'}
+        headers = {
+            'Content-type': 'text/plain',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': 0
+        }
+
         domain, extension = os.path.splitext(environ['PATH_INFO'])
         lines = tuple()
 
